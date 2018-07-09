@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densityDpi=device-dpi, user-scalable=no"/>
+<title>PRODUCT MANAGEMENT</title>
+
+<link rel="stylesheet" type="text/css" href="css/OM.css">
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+
+<script id="productTemplateStructure" type="text/x-jQuery-tmpl">
+       	<tr class="selectWidth20 alignLeft blueText tableBorderBlack">
+                	<div><td class="alignLeft blueText padding5 tableBorderBlack">${user}</td> </div>
+                	<td tableBorderBlack>|</td>                  
+                    
+                 <div class="clear"></div>
+                             
+                <td class="selectWidth15  tableBorderBlack">${id}</td>
+                <td class="selectWidth45  tableBorderBlack">${name}</td>
+                <td class="selectWidth10  tableBorderBlack">${quantity}</td>
+                <td class="selectWidth10 alignRight tableBorderBlack">${price}</td>
+                <div class="clear"></div>
+                </tr>
+</script>
+      
+    
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#productTemplateStructure').template('myTemplate');
+	 $.ajax({
+         url: "rest/product/getallproducts",
+         type: "get",
+         data: "format=json",
+         jsonp: "jsoncallback",
+         dataType: "json",
+         success: function(data)
+         {
+        	 $.tmpl('myTemplate', data).appendTo('#addedItems');
+         }
+     });
+ });
+	 
+	
+</script>
+</head>
+<body>
+	
+    <!--Code Starts Here-->
+    <div class="container">
+    	<div
+			class="orangeText boldText padding10 alignCenter headercontentblock0">Product
+			Management</div>       
+        <div class="headerBarblock">
+        	<div class="floatLeft boldText">&minus;</div>
+            <div class="floatLeft paddingLeft10">Product Inventory:Product List for All Users</div>
+            <div class="clear"></div>
+        </div>
+    	<!-- Below class to show LEFT and Right border -->
+        <div class="headercontentblock1">                      
+            <div class="container1"> 
+            	
+                   
+                    <div class="floatLeft selectWidth15">
+						<a href="AddProduct.html" class="blueButton">Add Product</a>
+                    </div>                
+                    <div class="clear"></div>
+                    <div class="spacer2"></div>                	
+                </div>
+                <div class="clear"></div>                                                            	                
+            </div>
+            <div class="sharpblueBar">Added Items</div>
+            <table id="addedItems" class="alignCenter padding15 tableBorderBlack">
+            
+            
+                
+                <thead class="selectWidth20 alignLeft blueText">
+                	<tr class="tableBorderBlack">
+                	<div><th class="selectWidth20 blueText padding5 tableBorderBlack"> Sales Rep </th> </div>
+                	<th>|</th>                 
+                    
+                    <div class="clear"></div>
+                             
+                <th class="selectWidth15 tableBorderBlack">Product Id</th>
+                <th class="selectWidth45 tableBorderBlack"> Product Name</th>
+                <th class="selectWidth10 tableBorderBlack">Quantity</th>
+                <th class="selectWidth10 alignRight tableBorderBlack">Price</th>
+                <div class="clear"></div>
+                </tr>
+                </thead>
+                
+            </div>
+            </table>
+            
+            <div class="omblueLine"></div>
+            <div class="container1">
+                <div class="spacer2"></div>
+                <div class="boldText">
+                	AT&T Any City, USA<br>
+                	(555) 555-5555
+                </div>
+                <div class="spacer2"></div>
+                        
+                <div class="clear"></div>
+            </div>
+        </div>
+        <!-- End to show LEFT and Right border -->
+        <!-- Below class to show Bottom border with LEFT and RIGHT rounded corners. -->
+    	<div class="headercontentblock0"></div>
+    	<!-- End to show Bottom border with LEFT and RIGHT rounded corners. -->
+    	<div class="spacer2"></div>        
+    </div> 
+    <!--Code Ends Here-->
+
+</body>
+</html>

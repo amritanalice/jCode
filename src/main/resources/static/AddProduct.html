@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densityDpi=device-dpi, user-scalable=no" />
+<title>PRODUCT MANAGEMENT</title>
+
+<link rel="stylesheet" type="text/css" href="css/OM.css">
+<link rel="stylesheet" type="text/css" href="css/OM.css">
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script
+	src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script
+	src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+<script id="productTemplateStructure" type="text/x-jQuery-tmpl">
+       	<tr id="tablerow{$id}" class="selectWidth20 alignLeft blueText tableBorderBlack">
+                	<div><td class="alignLeft blueText padding5 tableBorderBlack"><button class="editbtn blueText">Edit item</button></td> </div>
+                	<td tableBorderBlack>|</td>
+                	<td tableBorderBlack><button class="trashbtn"><div class="floatRight trashBlack"></div></button></td>                    
+                    
+                 <div class="clear"></div>
+                             
+                <td id="prodId" class="selectWidth15  tableBorderBlack">${id}</td>
+                <td id="prodName" class="selectWidth45  tableBorderBlack">${name}</td>
+                <td id="prodQuantity" class="selectWidth10  tableBorderBlack">${quantity}</td>
+                <td id="prodPrice" class="selectWidth10 alignRight tableBorderBlack">${price}</td>
+				<td id="prodImage"><img src="${imageUrl}" class="selectWidth100 tableBorderBlack"></td>
+				<td id="prodDescription" style="visibility:hidden">${description}</td>
+                <div class="clear"></div>
+                </tr>
+</script>
+
+
+
+<script type="text/javascript">
+	function reloadTable() {
+		$("#tblBody").empty();
+		$('#productTemplateStructure').template('myTemplate');
+		$.ajax({
+			url : "rest/product/getallproductsforuser",
+			type : "get",
+			data : "format=json",
+			jsonp : "jsoncallback",
+			dataType : "json",
+			success : function(data) {
+				tableReloadSuccess(data);
+			}
+		});
+	}
+
+	function tableReloadSuccess(data) {
+		$.tmpl('myTemplate', data).appendTo('#tblBody');
+
+		$('button.editbtn').on(
+				'click',
+				function() {
+					var row = $(this).closest('tr');
+					var id = row.find("td[id='prodId']").text();
+					var name = row.find("td[id='prodName']").text();
+					var quantity = row.find("td[id='prodQuantity']").text();
+					var price = row.find("td[id='prodPrice']").text();
+					var description = row.find("td[id='prodDescription']")
+							.text();
+
+					alert("Loaded data for Product Id " + id
+							+ "in the form for editing.");
+
+					$('#formProductId').val(id).prop("readonly", true);
+					$('#formProductName').val(name);
+					$('#formQuantity').val(quantity);
+					$('#formProductPrice').val(price);
+					$('#formProductDescription').val(description);
+					$("#productUpdateButton").show();
+					$('#productAddButton').hide();
+
+				});
+
+		$('button.trashbtn').on('click', function() {
+
+			var row = $(this).closest('tr');
+			var id = row.find("td[id='prodId']").text();
+			if (confirm("Deleting Product Id " + id)) {
+				$.ajax({
+					type : "POST",
+					url : "rest/product/deleteproduct",
+					data : {
+						productId : id
+					},
+					cache : false,
+					timeout : 600000,
+					success : function(data) {
+						console.log("SUCCESS : ", data);
+						reloadTable();
+					},
+					error : function(e) {
+						alert("Delete product failed");
+						console.log("ERROR : ", e);
+
+					}
+				});
+			} else {
+				// do nothing
+			}
+		});
+	}
+
+	function resetAddProductForm() {
+		$("#addProductForm")[0].reset();
+		$("#productUpdateButton").hide();
+		$('#productAddButton').show();
+		$('#formProductId').prop("readonly", false);
+	}
+
+	function onUpdateButtonClick() {
+
+		if (!validateFormSuccess()) {
+			return;
+		}
+
+		var form = $('#addProductForm')[0];
+		var data = new FormData(form);
+		$.ajax({
+			type : "POST",
+			enctype : 'multipart/form-data',
+			url : "rest/product/updateproduct",
+			data : data,
+			processData : false,
+			contentType : false,
+			cache : false,
+			timeout : 600000,
+			success : function(data) {
+				console.log("SUCCESS : ", data);
+				resetAddProductForm();
+				reloadTable();
+			},
+			error : function(e) {
+				alert("Update product failed");
+				console.log("ERROR : ", e);
+			}
+		});
+
+	}
+
+	function empty(string) {
+		console.log("Field value"+string);
+		if (typeof string == 'undefined' || string.length === 0 || string === "") {	
+			console.log("Field value read as empty");
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function validateFormSuccess() {
+		var productName = $("#formProductName").val();
+		var productDescription = $("#formProductDescription").val();
+		var quantity = $("#formQuantity").val();
+		var productId = $("#formProductId").val();
+		var price = $("#formProductPrice").val();
+
+		if (empty(productName)) {
+			alert('Please fill in Product Name');
+			$("#formProductName").focus();
+			return false;
+		} else if (empty(productDescription)) {
+			alert('Please fill in Product Description');
+			$("#formProductDescription").focus();
+			return false;
+		} else if (empty(quantity) || isNaN(quantity)) {
+			alert('Validation failure : Quantity empty or not a number');
+			$("#formQuantity").focus();
+			return false;
+		} else if (empty(price) || isNaN(price)) {
+			alert('Validation failure : Price empty or not a number');
+			$("#formProductPrice").focus();
+			return false;
+		} else if (empty(productId) || isNaN(productId)) {
+			alert('Validation failure : Product Id empty or not a number');
+			$("#formProductId").focus()
+			return false;
+		}
+		else
+			{
+			return true;
+			}
+
+	}
+
+	function onProductButtonClick() {
+		if (!validateFormSuccess()) {
+			return;
+		}
+
+		var form = $('#addProductForm')[0];
+		var data = new FormData(form);
+		$.ajax({
+			type : "POST",
+			enctype : 'multipart/form-data',
+			url : "rest/product/addproduct",
+			data : data,
+			processData : false,
+			contentType : false,
+			cache : false,
+			timeout : 600000,
+			success : function(data) {
+
+				$("#result").text(data);
+				console.log("SUCCESS : ", data);
+				$("#addProductForm")[0].reset();
+				reloadTable();
+			},
+			error : function(e) {
+
+				alert("Add product failed");
+				console.log("ERROR : ", e);
+
+			}
+		});
+
+	}
+
+	$(document).ready(reloadTable());
+
+	$(document).ready(function() {
+		$("#productAddButton").click(onProductButtonClick);
+		$("#productUpdateButton").click(onUpdateButtonClick);
+
+	});
+</script>
+</head>
+
+
+<body>
+
+	<!--Code Starts Here-->
+	<div class="container">
+		<div
+			class="orangeText boldText padding10 alignCenter headercontentblock0">Product
+			Management</div>
+		<div class="spacer2"></div>
+		<div class="headerBarblock">
+			<div class="floatLeft paddingLeft10">Product Inventory: Add
+				Product</div>
+			<div class="clear"></div>
+		</div>
+		<!-- Below class to show LEFT and Right border -->
+		<div class="headercontentblock1">
+			<div class="container1">
+				<div class="productAddForm ">
+					<form id="addProductForm" enctype="multipart/form-data"
+						method="post">
+						<div class="container4">
+							<div class="spacer2"></div>
+							<div class="floatLeft selectWidth45">
+								<input id="formProductName" name="productName" type="text"
+									class="inputboxBg selectWidth45" size="15" maxlength="15"
+									placeholder="Product Name">
+								<div class="padding10">*Product Name</div>
+							</div>
+							<div class="floatLeft selectWidth15">
+								<input id="formProductId" name="productId" type="text"
+									class="inputboxBg selectWidth45" size="15" maxlength="15"
+									placeholder="Product Id">
+								<div class="padding10">*Product Id</div>
+							</div>
+							<div class="floatLeft selectWidth15">
+								<input id="formQuantity" name="quantity" type="text"
+									class="inputboxBg selectWidth45" size="15" maxlength="15"
+									placeholder="">
+								<div class="padding10">*Qty</div>
+							</div>
+							<div class="floatLeft selectWidth15">
+								<input id="formProductPrice" name="price" type="text"
+									class="inputboxBg selectWidth45" size="15" maxlength="15"
+									placeholder="">
+								<div class="padding10">*Price</div>
+							</div>
+							<div class="floatLeft selectWidth45">
+								<input id="formProductDescription" name="productDescription"
+									type="text" class="inputboxBg selectWidth80" size="15"
+									maxlength="45" placeholder="Product Description">
+								<div class="padding10">*Product Description</div>
+							</div>
+							<div class="floatLeft selectWidth15">
+								<input id="productImage" name="productImage" type="file"
+									class="inputboxBg selectWidth45" size="15" maxlength="45"
+									placeholder="Upload Product Image">
+								<div class="padding10">*Product Image</div>
+							</div>
+							<div id="imgContainer"></div>
+							<div class="floatLeft selectWidth15">
+								<input id="productAddButton" type="button" value=" Quick Add "
+									class="greenButton"> <input id="productUpdateButton"
+									type="button" value="Update Product" class="update_button"
+									style="display: none">
+							</div>
+							<div class="clear"></div>
+							<div class="spacer2"></div>
+						</div>
+						<div class="clear"></div>
+					</form>
+				</div>
+				<div class="sharpblueBar">Added Items</div>
+				<table id="addedItems"
+					class="alignCenter padding15 tableBorderBlack">
+
+
+
+					<thead class="selectWidth20 alignLeft blueText">
+						<tr class="tableBorderBlack">
+							<div>
+								<th class="selectWidth20 blueText padding5 tableBorderBlack">
+									Edit item</th>
+							</div>
+							<th>|</th>
+							<th tableBorderBlack><div class="floatRight trashBlack"></div></th>
+
+							<div class="clear"></div>
+
+							<th class="selectWidth15 tableBorderBlack">Product Id</th>
+							<th class="selectWidth45 tableBorderBlack">Product Name</th>
+							<th class="selectWidth10 tableBorderBlack">Quantity</th>
+							<th class="selectWidth10 alignRight tableBorderBlack">Price</th>
+							<th class="selectWidth70 alignRight tableBorderBlack">Image</th>
+							<div class="clear"></div>
+					<tbody id="tblBody">
+					</tbody>
+					</tr>
+					</thead>
+
+					</div>
+				</table>
+
+				<div class="omblueLine"></div>
+				<div class="container1">
+					<div class="blueText boldText">These items will be tied to
+						you as a Sales Rep .</div>
+					<div class="boldText">
+						AT&T Any City, USA<br> (555) 555-5555
+					</div>
+					<div class="spacer2"></div>
+					<div class="floatLeft selectWidth45">
+						<a href="ProductsView.html" class="blueButton">Product List
+							for All Sales Rep</a>
+					</div>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<!-- End to show LEFT and Right border -->
+			<!-- Below class to show Bottom border with LEFT and RIGHT rounded corners. -->
+			<div class="headercontentblock0"></div>
+			<!-- End to show Bottom border with LEFT and RIGHT rounded corners. -->
+			<div class="spacer2"></div>
+		</div>
+		<!--Code Ends Here-->
+</body>
+</html>
